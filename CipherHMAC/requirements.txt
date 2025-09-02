@@ -1,0 +1,5 @@
+python-dotenv
+fastapi
+requests
+asyncpg
+uvicorn

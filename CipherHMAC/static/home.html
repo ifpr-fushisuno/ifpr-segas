@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="winter">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estação Meteorológica</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.20/dist/full.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-base-200 min-h-screen p-4 font-sans">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-primary">Estação Meteorológica</h1>
+      <select class="select select-bordered" id="theme-selector" >
+        <option disabled>Escolha um tema</option>
+        <option>light</option>
+        <option>dark</option>
+        <option>cupcake</option>
+        <option>bumblebee</option>
+        <option>emerald</option>
+        <option>corporate</option>
+        <option>synthwave</option>
+        <option>retro</option>
+        <option>cyberpunk</option>
+        <option>valentine</option>
+        <option>halloween</option>
+        <option>garden</option>
+        <option>forest</option>
+        <option>aqua</option>
+        <option>lofi</option>
+        <option>pastel</option>
+        <option>fantasy</option>
+        <option>wireframe</option>
+        <option>black</option>
+        <option>luxury</option>
+        <option>dracula</option>
+        <option>cmyk</option>
+        <option>autumn</option>
+        <option>business</option>
+        <option>acid</option>
+        <option>lemonade</option>
+        <option>night</option>
+        <option>coffee</option>
+        <option selected>winter</option>
+      </select>
+    </div>
+
+    <!-- Card Principal com Navegação -->
+    <div class="relative bg-base-100 rounded-2xl shadow p-6 mb-6 text-base-content">
+      <!-- Botões Laterais -->
+      <button class="btn btn-circle absolute -left-6 top-1/2 -translate-y-1/2 z-10"
+        onclick="navegarMensagem(-1)">❮</button>
+      <button class="btn btn-circle absolute -right-6 top-1/2 -translate-y-1/2 z-10"
+        onclick="navegarMensagem(1)">❯</button>
+
+      <h2 class="text-xl font-semibold mb-4 text-center" id="titulo-mensagem">📡 Mensagem</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-base-200 rounded-xl shadow p-4 text-center">
+          <p class="opacity-70">Temperatura</p>
+          <p class="text-2xl font-bold text-primary" id="temperatura">--</p>
+        </div>
+        <div class="bg-base-200 rounded-xl shadow p-4 text-center">
+          <p class="opacity-70">Umidade</p>
+          <p class="text-2xl font-bold text-secondary" id="umidade">--</p>
+        </div>
+        <div class="bg-base-200 rounded-xl shadow p-4 text-center">
+          <p class="opacity-70">Pressão</p>
+          <p class="text-2xl font-bold text-accent" id="pressao">--</p>
+        </div>
+      </div>
+
+      <div class="bg-base-200 rounded-xl shadow p-4 text-sm" id="info-extra">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mensagens = [];
+    let mensagemAtualIndex = 0;
+
+    async function carregarMensagens() {
+      try {
+        const res = await fetch("/mensagens");
+        mensagens = await res.json();
+
+        if (mensagens.length > 0) {
+          mensagemAtualIndex = 0; // Exibe a mais recente
+          exibirMensagem(mensagemAtualIndex);
+        } else {
+          document.getElementById("titulo-mensagem").textContent = "Nenhuma mensagem encontrada.";
+        }
+      } catch (err) {
+        console.error("Erro ao buscar mensagens:", err);
+      }
+    }
+
+    function exibirMensagem(index) {
+      const msg = mensagens[index];
+
+      document.getElementById("titulo-mensagem").textContent = `📡 Mensagem #${msg.id}`;
+      document.getElementById("temperatura").textContent = `${parseFloat(msg.temperatura).toFixed(1)}°C`;
+      document.getElementById("umidade").textContent = `${msg.umidade}%`;
+      document.getElementById("pressao").textContent = `${msg.pressao} hPa`;
+
+      const extraDiv = document.getElementById("info-extra");
+      extraDiv.innerHTML = `
+    <p><strong>Data:</strong> ${new Date(msg.data).toLocaleString()}</p>
+    <p><strong>HMAC:</strong> <code style="display:block; word-break: break-word">${msg.hmac}</code></p>
+    <p><strong>Status:</strong> <span class="${msg.valido ? 'text-success' : 'text-error'} font-semibold">
+      ${msg.valido ? '✅ Válida' : '❌ Inválida'}
+    </span></p>
+  `;
+    }
+
+
+    function navegarMensagem(direcao) {
+      if (mensagens.length === 0) return;
+
+      mensagemAtualIndex += direcao;
+      if (mensagemAtualIndex < 0) mensagemAtualIndex = mensagens.length - 1;
+      if (mensagemAtualIndex >= mensagens.length) mensagemAtualIndex = 0;
+
+      exibirMensagem(mensagemAtualIndex);
+    }
+
+    document.getElementById('theme-selector').addEventListener('change', function () {
+      document.documentElement.setAttribute('data-theme', this.value);
+    });
+
+    carregarMensagens();
+  </script>
+
+</body>
+
+</html>

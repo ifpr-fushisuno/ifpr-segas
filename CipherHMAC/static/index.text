@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estação Meteorológica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 font-sans">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-700">
+      Estação Meteorológica
+    </h1>
+
+    <!-- Dados Atuais -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-2xl shadow p-4 text-center">
+        <p class="text-gray-500">Temperatura</p>
+        <p class="text-2xl font-semibold text-red-600">26°C</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-4 text-center">
+        <p class="text-gray-500">Umidade</p>
+        <p class="text-2xl font-semibold text-blue-600">55%</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-4 text-center">
+        <p class="text-gray-500">Pressão</p>
+        <p class="text-2xl font-semibold text-green-600">1012 hPa</p>
+      </div>
+    </div>
+
+    <!-- Última Mensagem -->
+    <div class="bg-white rounded-2xl shadow p-4 mb-6">
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">📡 Última Mensagem Recebida</h2>
+      <p><strong>Timestamp:</strong> 2025-06-24T08:00:00Z</p>
+      <p><strong>Nonce:</strong> 124</p>
+      <p><strong>Status:</strong> <span class="text-green-600 font-semibold">✅ Válida</span></p>
+    </div>
+
+    <!-- Histórico (placeholder de gráfico) -->
+    <div class="bg-white rounded-2xl shadow p-4">
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">🕒 Histórico</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-100 h-40 rounded-lg flex items-center justify-center text-gray-500">
+          Gráfico de Temperatura
+        </div>
+        <div class="bg-gray-100 h-40 rounded-lg flex items-center justify-center text-gray-500">
+          Gráfico de Umidade
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

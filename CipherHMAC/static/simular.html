@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="winter">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador de Dados</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.20/dist/full.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/daisyui"></script>
+</head>
+
+<body class="bg-base-200 min-h-screen p-4 font-sans">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-primary">Simulador de Dados</h1>
+      <select class="select select-bordered w-48" id="theme-selector">
+        <option disabled>Escolha um tema</option>
+        <option>light</option>
+        <option>dark</option>
+        <option>cupcake</option>
+        <option>bumblebee</option>
+        <option>emerald</option>
+        <option>corporate</option>
+        <option>synthwave</option>
+        <option>retro</option>
+        <option>cyberpunk</option>
+        <option>valentine</option>
+        <option>halloween</option>
+        <option>garden</option>
+        <option>forest</option>
+        <option>aqua</option>
+        <option>lofi</option>
+        <option>pastel</option>
+        <option>fantasy</option>
+        <option>wireframe</option>
+        <option>black</option>
+        <option>luxury</option>
+        <option>dracula</option>
+        <option>cmyk</option>
+        <option>autumn</option>
+        <option>business</option>
+        <option>acid</option>
+        <option>lemonade</option>
+        <option>night</option>
+        <option>coffee</option>
+        <option selected>winter</option>
+      </select>
+    </div>
+
+    <div class="bg-base-100 p-6 rounded-2xl shadow max-w-xl mx-auto">
+      <form id="simulador" class="space-y-5">
+        <div>
+          <label class="label"><span class="label-text">Nome</span></label>
+          <input type="text" name="nome" class="input input-bordered w-full" required />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">Temperatura (°C)</span></label>
+          <input type="number" name="temperatura" class="input input-bordered w-full" step="0.1" required />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">Umidade (%)</span></label>
+          <input type="number" name="umidade" class="input input-bordered w-full" step="0.1" required />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">Pressão (hPa)</span></label>
+          <input type="number" name="pressao" class="input input-bordered w-full" step="0.1" required />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">Chave (para HMAC)</span></label>
+          <input type="text" name="chave" class="input input-bordered w-full" required />
+        </div>
+
+        <button class="btn btn-primary w-full" type="submit">Gerar HMAC</button>
+        <button class="btn btn-outline w-full" id="simular-reais" type="button">
+          Simular com Dados Reais (Cascavel)
+        </button>
+      </form>
+
+      <div id="resultado" class="mt-6 text-center text-base-content"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('theme-selector').addEventListener('change', function () {
+      document.documentElement.setAttribute('data-theme', this.value);
+    });
+
+    const form = document.getElementById('simulador');
+    const resultadoDiv = document.getElementById('resultado');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultadoDiv.innerHTML = "Gerando HMAC...";
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // Requisição para gerar o HMAC
+      const res = await fetch('/gerar-hmac', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        const hmac = json.hmac;         // campo correto conforme backend
+        const mensagem = json.mensagem;
+
+        resultadoDiv.innerHTML = `
+          <div class="space-y-2 text-left">
+            <p><strong>Mensagem:</strong></p>
+            <code style="display:block; max-width:100%; word-break: break-word; overflow-wrap: anywhere; padding:4px; background:#f3f4f6; border-radius:4px; white-space: pre-wrap;">${mensagem}</code>
+            <p><strong>HMAC:</strong></p>
+            <code style="display:block; max-width:100%; word-break: break-all; overflow-x:auto; padding:4px; background:#f3f4f6; border-radius:4px;">${hmac}</code>
+            <button class="btn btn-success mt-2" id="enviar-servidor">Enviar Mensagem para o Servidor</button>
+          </div>
+        `;
+
+        // Evento para enviar os dados e hmac para validação e salvamento
+        document.getElementById('enviar-servidor').addEventListener('click', async () => {
+          const enviarRes = await fetch('/validar-hmac', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nome: data.nome,
+              temperatura: data.temperatura,
+              umidade: data.umidade,
+              pressao: data.pressao,
+              hmac: hmac
+            })
+          });
+
+          const enviarJson = await enviarRes.json();
+
+          if (enviarRes.ok && enviarJson.mensagem && !enviarJson.mensagem.includes("inválido")) {
+            resultadoDiv.innerHTML = `<p class="text-success">${enviarJson.mensagem}</p>`;
+          } else {
+            resultadoDiv.innerHTML = `<p class="text-error">${enviarJson.mensagem || 'Erro ao validar e salvar dados.'}</p>`;
+          }
+        });
+
+
+      } else {
+        resultadoDiv.innerHTML = `<p class="text-error">Erro: ${json.mensagem || 'Falha ao gerar HMAC.'}</p>`;
+      }
+    });
+
+    document.getElementById('simular-reais').addEventListener('click', async () => {
+      const res = await fetch('/simular/openweather', { method: 'POST' });
+      const resultado = await res.json();
+
+      if (res.ok) {
+        form.elements['temperatura'].value = resultado.temperatura ?? '';
+        form.elements['umidade'].value = resultado.umidade ?? '';
+        form.elements['pressao'].value = resultado.pressao ?? '';
+        resultadoDiv.textContent = "Dados reais simulados com sucesso!";
+      } else {
+        resultadoDiv.textContent = "Erro ao buscar dados reais.";
+      }
+    });
+  </script>
+</body>
+
+</html>
