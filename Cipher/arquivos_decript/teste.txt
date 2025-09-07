@@ -1,3 +1,0 @@
-Estou fazendo um teste de criptografia
-
-usando o AES e o CBF

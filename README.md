@@ -20,7 +20,7 @@ Os códigos foram implementados com foco em conceitos fundamentais de segurança
 - **Criptografia Simétrica e Assimétrica:** demonstrações práticas do uso de chaves para proteger dados.
 - **HMAC:** implementação de um código de autenticação de mensagem baseado em hash.
 - **Metadados:** scripts para encriptar e decriptar metadados em arquivos.
-- **Criptografia Medieval:** sua própria implementação de um algoritmo de cifragem, um projeto para solidificar o entendimento dos conceitos.
+- **Criptografia Medieval:** Minha própria implementação de um algoritmo de cifragem, um projeto para solidificar o entendimento dos conceitos.
 
 ### 📝 Projetos
 - **Envelopamento Digital:** futuro projeto para combinar criptografia simétrica e assimétrica de forma eficiente.
