@@ -3,7 +3,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
-from Modules.aes_module import encrypt_aes, decrypt_aes
+from Modules.aes_module import *
 
 # --- Geração de chaves RSA ---
 def generatePublicAndPrivateKey():
@@ -84,38 +84,42 @@ def load_public_key_from_input():
 
 # --- Carregar chave privada ---
 def load_private_key_from_input():
-    key_input = input("Digite o caminho da chave pública ou cole o PEM:\n>> ").strip()
+    key_input = input("Digite o caminho da chave privada ou cole o PEM:\n>> ").strip()
     if os.path.exists(key_input):
         with open(key_input, "rb") as f: key_bytes = f.read()
     else: key_bytes = key_input.encode()
     return serialization.load_pem_private_key(key_bytes, password=None)
 
 # --- Envelope Digital ---
-def doEnvelopDigital(public_key, plaintext):
+def doEnvelopDigital(public_key, filename):
     # Gerar chave simétrica (AES) e IV
     key_aes = generateKeyAes()
-    iv = os.urandom(16)
 
-    # Cifra o conteúdo com AES
-    ciphertext = encrypt_aes(key_aes, iv, plaintext)
+    # Criptografa o arquivo com AES
+    encriptFile(filename, key_aes)
+    encrypted_filename = f'./arquivos_encript/{filename}.enc'
 
     # Cifra a chave AES com RSA
     cipherrsa = encrypt_rsa(public_key, key_aes)
 
     return {
-        "ciphertext": ciphertext,
-        "key_encrypted": cipherrsa,
-        "iv": iv
+        "encrypted_file": encrypted_filename,
+        "key_encrypted": cipherrsa
     }
 
 # --- Descriptografar envelope digital ---
 def decryptEnvelope(private_key, envelope_dict):
-    # Descriptografa a chave AES com a chave RSA
+    # Descriptografa a chave AES com RSA
     key_aes = decrypt_rsa(private_key, envelope_dict["key_encrypted"])
 
-    #Descriptografa o conteúdo com AES
-    plaintext = decrypt_aes(key_aes, envelope_dict["iv"], envelope_dict["ciphertext"])
-    return plaintext
+    # Descriptografa o arquivo com AES
+    encrypted_filepath = envelope_dict["encrypted_file"]
+    filename = os.path.basename(encrypted_filepath)
+    decriptFile(filename, key_aes)
+
+    # Retorna o caminho do arquivo descriptografado
+    output_filepath = f'./arquivos_decript/{filename[:-4]}'
+    return output_filepath
 
 def init():
     clear_screen()
@@ -124,53 +128,42 @@ def init():
     print("=" * 55)
 
     is_file = input("Digite: 0 - Para arquivo | 1 - Para texto\n>> ") == '0'
-    plaintext = (
-        input("Nome do arquivo em ./arquivos:\n>> ")
-        if is_file else input("Texto a criptografar:\n>> ")
-    )
 
     if not is_file:
+        plaintext = input("Texto a criptografar:\n>> ")
         filename = f"msg_{os.urandom(5).hex()}.txt"
         with open(f"./arquivos/{filename}", 'x', encoding='utf-8') as f:
             f.write(plaintext)
-        plaintext = filename
+    else:
+        filename = input("Nome do arquivo em ./arquivos:\n>> ").strip()
 
     loading_bar("Gerando Chaves RSA")
     generatePublicAndPrivateKey()
     public_key = load_public_key_from_input()
 
-    with open(f"./arquivos/{plaintext}", 'rb') as f:
-        plaintextBin = f.read()
-
-    envelope = doEnvelopDigital(public_key, plaintextBin)
+    envelope = doEnvelopDigital(public_key, filename)
 
     print("\n--- Resultado ---")
+    print("Arquivo criptografado (AES):", envelope["encrypted_file"])
     print("Chave AES cifrada (RSA):", envelope["key_encrypted"].hex())
-    print("IV:", envelope["iv"].hex())
-    print("Ciphertext (AES):", envelope["ciphertext"].hex())
 
 # --- Função de teste para descriptografia ---
 def decrypt_init():
     private_key = load_private_key_from_input()
 
     import binascii
-    ciphertext_hex = input("Digite o ciphertext (AES) em HEX:\n>> ").strip()
+    encrypted_file = input("Digite o caminho do arquivo criptografado:\n>> ").strip()
     key_encrypted_hex = input("Digite a chave AES cifrada (RSA) em HEX:\n>> ").strip()
-    iv_hex = input("Digite o IV (AES) em HEX:\n>> ").strip()
 
     envelope_dict = {
-        "ciphertext": binascii.unhexlify(ciphertext_hex),
-        "key_encrypted": binascii.unhexlify(key_encrypted_hex),
-        "iv": binascii.unhexlify(iv_hex)
+        "encrypted_file": encrypted_file,
+        "key_encrypted": binascii.unhexlify(key_encrypted_hex)
     }
 
-    plaintext = decryptEnvelope(private_key, envelope_dict)
+    output_filepath = decryptEnvelope(private_key, envelope_dict)
 
-    print("\n--- Texto descriptografado ---")
-    try:
-        print(plaintext.decode(errors='ignore'))
-    except Exception:
-        print(plaintext)
+    print("\n--- Arquivo descriptografado ---")
+    print(f"Caminho do arquivo: {output_filepath}")
 
 
 

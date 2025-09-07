@@ -1,14 +1,14 @@
 import os
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives import padding as aes_padding
 
 
 # --- Funções básicas AES ---
 def encrypt_aes(key: bytes, iv: bytes, plaintext: bytes) -> bytes:
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
-    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padder = aes_padding.PKCS7(algorithms.AES.block_size).padder()
     padded_plaintext = padder.update(plaintext) + padder.finalize()
     return encryptor.update(padded_plaintext) + encryptor.finalize()
 
@@ -17,7 +17,7 @@ def decrypt_aes(key: bytes, iv: bytes, ciphertext: bytes) -> bytes:
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     decryptor = cipher.decryptor()
     padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
-    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    unpadder = aes_padding.PKCS7(algorithms.AES.block_size).unpadder()
     return unpadder.update(padded_plaintext) + unpadder.finalize()
 
 
