@@ -38,7 +38,7 @@ async def enviar_certificado():
 
 
 @app.post("/challenge")
-async def server_challenge(ciphertext: str):
+async def server_challenge(payload: dict = Body(...)):
     """
     Prova de posse da chave privada do servidor.
     O servidor:
@@ -47,7 +47,11 @@ async def server_challenge(ciphertext: str):
     - Devolve o nonce em Base64
     """
     try:
-        ciphertext_bytes = base64.b64decode(ciphertext)
+        ciphertext = payload["ciphertext"]
+
+        #ciphertext_bytes = base64.b64decode(ciphertext)
+        ciphertext_bytes = base64.b64decode(ciphertext.encode("utf-8"))
+
 
         plaintext_bytes = certs_module.decrypt_with_private_key(
             SERVER_PRIVATE_KEY,
@@ -55,6 +59,10 @@ async def server_challenge(ciphertext: str):
         )
 
         nonce_b64 = base64.b64encode(plaintext_bytes).decode()
+
+        
+        with open("nonces/server_nonce.txt", "w") as f:
+            f.write(nonce_b64)
 
         return {
             "nonce": nonce_b64

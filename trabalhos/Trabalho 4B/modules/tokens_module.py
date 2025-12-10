@@ -7,7 +7,7 @@ import jwt
 from datetime import datetime, timedelta
 
 SECRET_KEY = 'aiaiai carrpato nao tem pai'
-TOKEN_EXPIRATION = 3600
+TOKEN_EXPIRATION = 50
 
 def criar_jwt_manual(payload, chave_secreta=SECRET_KEY):
     header = {"alg": "HS256", "typ": "JWT"}

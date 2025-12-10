@@ -2,8 +2,9 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.x509 import CertificateBuilder, Name, SubjectAlternativeName, KeyUsage
-from datetime import datetime, timedelta
+from cryptography.x509 import CertificateBuilder, SubjectAlternativeName, KeyUsage
+from datetime import datetime, timedelta, timezone
+
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -103,7 +104,7 @@ def generate_server_cert(ca_cert, ca_key, cert_path="./workspaces/ifpr-segas/tra
     valid_until = valid_from + timedelta(days=365)
 
     key_usage = KeyUsage(
-        digital_signature=False,
+        digital_signature=True,
         content_commitment=False,
         key_encipherment=True,
         data_encipherment=False,
@@ -172,6 +173,10 @@ def validate_chain(certificates, expected_cn=None):
             )
         except Exception as e:
             return False, f"Assinatura inválida: {str(e)}"
+        
+        now = datetime.now(timezone.utc)
+        if not (current_cert.not_valid_before_utc <= now <= current_cert.not_valid_after_utc):
+            return False, "Certificado expirou ou ainda não é válido."
 
     return True, "Cadeia válida"
 
