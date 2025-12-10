@@ -6,13 +6,8 @@ import time
 import jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = 'sua_chave_super_secreta'
-TOKEN_EXPIRATION = 3600  # 1 hora
-
-users_db = {
-    1: {'id': '1', 'username': 'joao_silva', 'email': 'joao@exemplo.com', 'role': 'admin'},
-    2: {'id': '2', 'username': 'maria_santos', 'email': 'maria@exemplo.com', 'role': 'user'}
-}
+SECRET_KEY = 'aiaiai carrpato nao tem pai'
+TOKEN_EXPIRATION = 3600
 
 def criar_jwt_manual(payload, chave_secreta=SECRET_KEY):
     header = {"alg": "HS256", "typ": "JWT"}
@@ -33,14 +28,14 @@ def criar_jwt_biblioteca(payload, chave_secreta=SECRET_KEY):
     return jwt.encode(payload, chave_secreta, algorithm='HS256')
 
 
-def criar_token(user_id):
-    user = users_db.get(user_id)
+def criar_token(user_id, db):
+    user = db.get(user_id)
     if not user:
         raise ValueError('Usuário não encontrado!')
 
     now = int(datetime.utcnow().timestamp())
     payload = {
-        'sub': str(user_id),
+        'sub': user_id,
         'username': user['username'],
         'email': user['email'],
         'role': user['role'],
@@ -48,15 +43,15 @@ def criar_token(user_id):
         'exp': now + TOKEN_EXPIRATION
     }
 
-    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    token = criar_jwt_biblioteca(payload)
     return token
 
 
-def validar_token(token):
+def validar_token(token, db):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        user_id = int(payload['sub'])
-        user = users_db.get(user_id)
+        user_id = payload['sub']
+        user = db.get(user_id)
         if not user:
             raise jwt.InvalidTokenError('Usuário não encontrado')
         return user

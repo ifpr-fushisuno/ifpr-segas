@@ -3,7 +3,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 
-from Modules.aes_module import *
+from modules.aes_module import *
 
 # --- Geração de chaves RSA ---
 def generatePublicAndPrivateKey():

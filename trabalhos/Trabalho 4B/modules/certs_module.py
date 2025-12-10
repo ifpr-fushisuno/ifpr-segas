@@ -6,7 +6,17 @@ from cryptography.x509 import CertificateBuilder, Name, SubjectAlternativeName, 
 from datetime import datetime, timedelta
 import os
 
-def generate_ca(cert_path="certificado_RaizIFPR_teste.pem", key_path="private_key_RaizIFPR.pem"):
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CERT_DIR = os.path.join(BASE_DIR, "certs")
+
+CA_CERT = os.path.join(CERT_DIR, "certificado_Raiz.pem")
+CA_KEY = os.path.join(CERT_DIR, "private_key_Raiz.pem")
+
+SERVER_CERT = os.path.join(CERT_DIR, "certificado_Server.pem")
+SERVER_KEY = os.path.join(CERT_DIR, "private_key_Server.pem")
+
+
+def generate_ca(cert_path=CA_CERT, key_path=CA_KEY):
     # Gerar chave privada
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -27,12 +37,14 @@ def generate_ca(cert_path="certificado_RaizIFPR_teste.pem", key_path="private_ke
         x509.NameAttribute(x509.oid.NameOID.COUNTRY_NAME, u"BR"),
         x509.NameAttribute(x509.oid.NameOID.STATE_OR_PROVINCE_NAME, u"PR"),
         x509.NameAttribute(x509.oid.NameOID.LOCALITY_NAME, u"Cascavel"),
-        x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, u"IFPR"),
-        x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS, u"ifpr.cascavel@ifpr.edu.br"),
+        x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, u"SRV"),
+        x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS, u"srv@spamok.com"),
         x509.NameAttribute(x509.oid.NameOID.BUSINESS_CATEGORY, u"Educacao"),
-        x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, u"ifpr.edu.br"),
+        x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, u"srv.local"),
     ])
+
     issuer = subject
+
     valid_from = datetime.utcnow()
     valid_until = valid_from + timedelta(days=365*2)
 
@@ -49,7 +61,7 @@ def generate_ca(cert_path="certificado_RaizIFPR_teste.pem", key_path="private_ke
     ).not_valid_after(
         valid_until
     ).add_extension(
-        SubjectAlternativeName([x509.DNSName(u"alternativo.ifpr.edu.br")]),
+        SubjectAlternativeName([x509.DNSName(u"srvalt.local")]),
         critical=False
     ).sign(private_key, hashes.SHA256(), default_backend())
 
@@ -59,7 +71,7 @@ def generate_ca(cert_path="certificado_RaizIFPR_teste.pem", key_path="private_ke
 
     return certificate, private_key
 
-def generate_server_cert(ca_cert, ca_key, cert_path="certificado_ThiagoLo.pem", key_path="private_key_ThiagoLo.pem"):
+def generate_server_cert(ca_cert, ca_key, cert_path="./workspaces/ifpr-segas/trabalhos/Trabalho 4B/certs/certificado_Server.pem", key_path="./workspaces/ifpr-segas/trabalhos/Trabalho 4B/certs/private_key_Server.pem"):
     # Gerar chave privada do servidor
     server_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -81,16 +93,17 @@ def generate_server_cert(ca_cert, ca_key, cert_path="certificado_ThiagoLo.pem", 
         x509.NameAttribute(x509.oid.NameOID.STATE_OR_PROVINCE_NAME, u"PR"),
         x509.NameAttribute(x509.oid.NameOID.LOCALITY_NAME, u"Cascavel"),
         x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, u"IFPR"),
-        x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS, u"thiago.lol@ifpr.edu.br"),
+        x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS, u"server.@spamok.com"),
         x509.NameAttribute(x509.oid.NameOID.BUSINESS_CATEGORY, u"Educacao"),
-        x509.NameAttribute(x509.oid.NameOID.TITLE, u"Professor"),
-        x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, u"Thiago Berticelli Lo"),
+        x509.NameAttribute(x509.oid.NameOID.TITLE, u"Server Local"),
+        x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, u"Server"),
     ])
+
     valid_from = datetime.utcnow()
     valid_until = valid_from + timedelta(days=365)
 
     key_usage = KeyUsage(
-        digital_signature=True,
+        digital_signature=False,
         content_commitment=False,
         key_encipherment=True,
         data_encipherment=False,
@@ -162,7 +175,6 @@ def validate_chain(certificates, expected_cn=None):
 
     return True, "Cadeia válida"
 
-
 def encrypt_with_cert(cert, message: bytes):
     pub_key = cert.public_key()
     ciphertext = pub_key.encrypt(
@@ -189,3 +201,45 @@ def decrypt_with_private_key(private_key_path, ciphertext: bytes):
         )
     )
     return plaintext
+
+
+def ensure_certificates():
+    """
+    Garante que:
+    - A CA existe
+    - O certificado do servidor existe
+    Se não existir, gera.
+    """
+
+    os.makedirs(CERT_DIR, exist_ok=True)
+
+    if not os.path.exists(CA_CERT) or not os.path.exists(CA_KEY):
+        print("[INFO] Gerando Certificado Raiz (CA)...")
+        ca_cert, ca_key = generate_ca(
+            cert_path=CA_CERT,
+            key_path=CA_KEY
+        )
+    else:
+        print("[INFO] Certificado Raiz encontrado.")
+        ca_cert = load_cert(CA_CERT)
+        with open(CA_KEY, "rb") as f:
+            ca_key = serialization.load_pem_private_key(
+                f.read(), password=None
+            )
+
+    if not os.path.exists(SERVER_CERT) or not os.path.exists(SERVER_KEY):
+        print("[INFO] Gerando Certificado do Servidor...")
+        generate_server_cert(
+            ca_cert,
+            ca_key,
+            cert_path=SERVER_CERT,
+            key_path=SERVER_KEY
+        )
+    else:
+        print("[INFO] Certificado do Servidor encontrado.")
+
+    return {
+        "ca_cert": CA_CERT,
+        "server_cert": SERVER_CERT,
+        "server_key": SERVER_KEY
+    }
