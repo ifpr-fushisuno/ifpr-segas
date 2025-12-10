@@ -1,0 +1,58 @@
+ifpr-segas/
+│
+├── README.md
+├── docs/
+│   ├── enunciados/
+│   │   ├── trabalho-01.pdf
+│   │   └── trabalho-02.pdf
+│   ├── relatorios/
+│   │   ├── trabalho-01.md
+│   │   └── trabalho-02.md
+│   └── referencias.md
+│
+├── scripts/
+│   ├── utils/
+│   │   ├── helpers.py
+│   │   └── file_utils.py
+│   └── setup.sh
+│
+├── cryptography/
+│   ├── symmetric/
+│   │   ├── cipher/
+│   │   │   ├── encrypt.py
+│   │   │   ├── decrypt.py
+│   │   │   └── README.md
+│   │   └── cipher_hmac/
+│   │       ├── encrypt_hmac.py
+│   │       ├── decrypt_hmac.py
+│   │       └── README.md
+│   │
+│   ├── asymmetric/
+│   │   ├── rsa/
+│   │   │   ├── keygen.py
+│   │   │   ├── encrypt.py
+│   │   │   ├── decrypt.py
+│   │   │   └── README.md
+│   │
+│   └── hybrid/
+│       └── envelope_digital/
+│           ├── envelope.py
+│           ├── README.md
+│           └── diagram.png
+│
+├── data/
+│   ├── input/
+│   │   └── arquivos/
+│   ├── encrypted/
+│   │   └── arquivos_encript/
+│   ├── decrypted/
+│   │   └── arquivos_decript/
+│   └── keys/
+│       └── rsa_keys/
+│
+├── tests/
+│   ├── test_cipher.py
+│   ├── test_rsa.py
+│   └── test_envelope.py
+│
+└── .gitignore

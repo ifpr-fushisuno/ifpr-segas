@@ -26,3 +26,9 @@ TestResults.xml
 **meta.py
 **.env
 **__pycache__
+
+**data/keys/*
+**data/encrypted/*
+**data/decrypted/*
+**__pycache__/
+**.env
